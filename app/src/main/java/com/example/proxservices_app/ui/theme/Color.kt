@@ -22,7 +22,8 @@ val DoradoEstrellas = Color(0xFFFFD700)      // Para las estrellas en las reseñ
 val AzulHipervinculo = Color(0xFF007BFF)    // Tono azul para textos clickables ("Olvidaste tu contraseña?")
 val AzulVerificado = Color(0xFF0C3D77)      // Color del check de "Profesional verificado"
 
-
+val Verdebus = Color(0xFF335957)
+val textFiel = Color(0xFF00C890)
 /*
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
