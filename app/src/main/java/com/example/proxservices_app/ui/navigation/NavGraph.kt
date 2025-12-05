@@ -6,7 +6,7 @@ enum class UserRole { CLIENT, WORKER, UNAUTHENTICATED }
 
 @Composable
 fun NavGraph() {
-    val userRole = UserRole.CLIENT
+    val userRole = UserRole.WORKER
 
     when (userRole) {
         UserRole.CLIENT -> ClientNav()
