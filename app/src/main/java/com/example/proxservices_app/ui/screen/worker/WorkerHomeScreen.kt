@@ -386,4 +386,4 @@ fun WorkerHomeScreenPreview() {
         onNavigateToConfirmation = { /* Navegando a Job ID: $it */ },
         onNavigateToNotifications = { /* Navegando a Notificaciones */ } // Callback dummy para Preview
     )
-}
+}//fin

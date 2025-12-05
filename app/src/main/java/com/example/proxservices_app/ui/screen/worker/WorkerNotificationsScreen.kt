@@ -318,4 +318,4 @@ fun NotificationCard(item: NotificationItem) {
 @Composable
 fun WorkerNotificationsScreenPreview() {
     WorkerNotificationsScreen(navController = rememberNavController())
-}
+}//fin

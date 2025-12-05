@@ -407,4 +407,4 @@ fun WorkerJobCompletadoCard(job: JobItem) {
 @Composable
 fun WorkerJobsScreenPreview() {
     WorkerJobsScreen(navController = rememberNavController())
-}
+}//fin

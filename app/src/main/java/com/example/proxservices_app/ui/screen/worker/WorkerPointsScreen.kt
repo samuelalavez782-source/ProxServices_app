@@ -312,4 +312,4 @@ fun WorkerPointsScreenPreview() {
         navController = rememberNavController(),
         onNavigateToRedemption = { /* */ }
     )
-}
+}//fin
