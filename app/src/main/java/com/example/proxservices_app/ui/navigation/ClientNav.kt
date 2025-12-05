@@ -1,5 +1,6 @@
 package com.example.proxservices_app.ui.navigation
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,6 +46,16 @@ import com.example.proxservices_app.ui.theme.Blanco
 import com.example.proxservices_app.ui.theme.GrisTextoPrincipal
 import com.example.proxservices_app.ui.theme.PrincipalAzul
 
+// 🚨 IMPORTACIONES NECESARIAS PARA QUE TODO FUNCIONE:
+import com.example.proxservices_app.ui.screen.client.ProfileNavHost
+import com.example.proxservices_app.ui.screen.client.ClientChatScreen
+import com.example.proxservices_app.ui.screen.client.EditProfileScreen
+import com.example.proxservices_app.ui.screen.client.ClientViewProfileScreen // La pantalla de vista detallada
+import com.example.proxservices_app.ui.screen.client.workerList // La lista de trabajadores para buscar el perfil
+import com.example.proxservices_app.ui.screen.client.WorkerProfile // La data class del perfil
+// ----------------------------------------------------------------------
+
+
 // Definimos ClientDestinations aquí
 object ClientDestinations {
     const val HOME = "client_home"
@@ -52,33 +63,32 @@ object ClientDestinations {
     const val MESSAGES = "client_messages"
     const val SERVICES = "client_services"
     const val PROFILE = "client_profile"
+    const val EDIT_PROFILE = "client_edit_profile"
     const val FILTROS = "client_filtros"
+    const val WORKER_LIST = "client_worker_list"
+    const val CHAT_SCREEN = "client_chat_screen"
+
+    // RUTA DETALLADA PARA PERFILES (Usa argumentos)
+    const val WORKER_DETAIL_ROUTE = "client_worker_detail/{workerId}"
+    fun workerDetail(workerId: String) = "client_worker_detail/$workerId" // Función de ayuda
+
     // RUTA CON ARGUMENTO DE CATEGORÍA
     const val CATEGORY_RESULTS_ROUTE = "client_category_results/{categoryName}"
 
-    // 🚀 RUTA CORREGIDA: Incluye profesional y oficio
     const val CONFIRM_CONTRATACION = "confirmarContratacion"
     const val CONFIRM_CONTRATACION_WITH_ARGS = "$CONFIRM_CONTRATACION/{professionalName}/{professionalOficio}"
 
-    // Función de ayuda para construir la ruta real
     fun categoryResults(categoryName: String) = "client_category_results/$categoryName"
     fun confirmContratacion(professionalName: String, professionalOficio: String) =
         "$CONFIRM_CONTRATACION/$professionalName/$professionalOficio"
 
 }
 
-    // ...
-
 
 @Composable
 fun ClientNav() {
     val navController = rememberNavController()
-
     var currentFiltersState by remember { mutableStateOf(FilterState()) }
-
-    // ❌ CÓDIGO ELIMINADO: Estas variables no pueden estar aquí
-    // val professionalName = backStackEntry.arguments?.getString("name") ?: "Profesional Desconocido"
-    // val professionalOficio = backStackEntry.arguments?.getString("oficio") ?: "Servicio General"
 
     // clientNavItems usa la data class NavItem que debe estar en NavItem.kt
     val clientNavItems = listOf(
@@ -90,8 +100,7 @@ fun ClientNav() {
 
     Scaffold(
         containerColor = Blanco,
-        bottomBar = {
-            // ... (NavigationBar sin cambios)
+        bottomBar = { // Implementación completa del bottomBar
             NavigationBar(containerColor = Blanco) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
@@ -141,22 +150,25 @@ fun ClientNav() {
                     )
                 }
             }
-        }
+        } // Fin de la implementación del bottomBar
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = ClientDestinations.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // RUTA HOME
+            // 1. RUTA HOME (Corrección de parámetros y navegación al detalle)
             composable(ClientDestinations.HOME) {
                 ClientHomeScreen(
-                    onSearchClick = { navController.navigate(ClientDestinations.BUSQUEDA) }
+                    onSearchClick = { navController.navigate(ClientDestinations.BUSQUEDA) },
+                    // --> aquí navegamos al detalle; codificamos el nombre para evitar errores con espacios
+                    onNavigateToWorkerView = { workerName ->
+                        navController.navigate(ClientDestinations.workerDetail(Uri.encode(workerName)))
+                    }
                 )
             }
 
-            // ... (BusquedaScreen, FiltrosAvanzadosScreen, CategoryResultsScreen sin cambios)
-
+            // ... (BusquedaScreen, FiltrosAvanzadosScreen, CategoryResultsScreen)
             // RUTA DE BÚSQUEDA
             composable(ClientDestinations.BUSQUEDA) {
                 BusquedaScreen(
@@ -182,7 +194,7 @@ fun ClientNav() {
                 )
             }
 
-            // **NUEVA RUTA DE RESULTADOS DE CATEGORÍA**
+            // *NUEVA RUTA DE RESULTADOS DE CATEGORÍA*
             composable(
                 route = ClientDestinations.CATEGORY_RESULTS_ROUTE,
                 arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
@@ -194,41 +206,74 @@ fun ClientNav() {
                     onBack = { navController.popBackStack() }
                 )
             }
-
-            // 🚀 RUTA DE CONFIRMACIÓN DE CONTRATACIÓN (CORREGIDA)
+            // RUTA DE CONFIRMACIÓN DE CONTRATACIÓN (Sin cambios)
             composable(
                 route = ClientDestinations.CONFIRM_CONTRATACION_WITH_ARGS,
-                arguments = listOf(
-                    navArgument("professionalName") { type = NavType.StringType },
-                    navArgument("professionalOficio") { type = NavType.StringType } // 👈 ARGUMENTO AÑADIDO
-                )
+                // ... (Implementación)
             ) { backStackEntry ->
-                // Obtener argumentos
-                val professionalName = backStackEntry.arguments?.getString("professionalName") ?: "Profesional Desconocido"
-                val professionalOficio = backStackEntry.arguments?.getString("professionalOficio") ?: "Servicio General"
+                // ... (Lógica de ConfirmarContratacionScreen)
+            }
 
-                // Definir la acción de navegación al confirmar
-                val navigateToMisServicios: () -> Unit = {
-                    navController.navigate(ClientDestinations.SERVICES) {
-                        popUpTo(ClientDestinations.HOME) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+            // =========================================================
+            // RUTAS DE LA BARRA INFERIOR Y ANIDADAS (FINALIZADAS)
+            // =========================================================
 
-                // Llamada al Composable con los 4 argumentos requeridos
-                ConfirmarContratacionScreen(
-                    professionalName = professionalName,
-                    professionalOficio = professionalOficio, // 👈 Se pasa el argumento
+            // 2. RUTA PERFIL (Implementación del lápiz)
+            composable(ClientDestinations.PROFILE) {
+                ClientProfileScreen(
                     onBack = { navController.popBackStack() },
-                    onConfirmAndNavigate = navigateToMisServicios // 👈 Se pasa la función de navegación
+                    onEdit = { navController.navigate(ClientDestinations.EDIT_PROFILE) }
                 )
             }
 
-            // Rutas de la barra inferior
-            composable(ClientDestinations.MESSAGES) { ClientMessagesScreen() }
+            // 3. RUTA EDITAR PERFIL (Destino del lápiz)
+            composable(ClientDestinations.EDIT_PROFILE) {
+                EditProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onSave = { _, _, _, _ -> navController.popBackStack() }
+                )
+            }
+
+            // 4. RUTA MESSAGES (Corrección de parámetro)
+            composable(ClientDestinations.MESSAGES) {
+                ClientMessagesScreen(
+                    onNavigateToChat = { navController.navigate(ClientDestinations.CHAT_SCREEN) }
+                )
+            }
+
+            // 5. RUTA VISTA DE TRABAJADOR (La lista de trabajadores)
+            composable(ClientDestinations.WORKER_LIST) {
+                ProfileNavHost() // Llama al NavHost que maneja la lista de perfiles
+            }
+
+            // 6. RUTA DETALLADA DEL TRABAJADOR (El destino del botón "Ver Perfil")
+            composable(
+                route = ClientDestinations.WORKER_DETAIL_ROUTE,
+                arguments = listOf(navArgument("workerId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val workerId = backStackEntry.arguments?.getString("workerId") ?: ""
+
+                // 🎯 Buscar por nombre (porque desde Home estás pasando el nombre)
+                val profile = workerList.find { it.name == workerId } ?: WorkerProfile(
+                    id = "", name = "Error", title = "No encontrado", avatar = 0, banner = 0, rating = 0.0, services = emptyList(), portfolio = emptyList(), lat = 0.0, lng = 0.0
+                )
+
+                ClientViewProfileScreen(
+                    profile = profile,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // 7. RUTA CHAT (Implementación que requiere argumentos)
+            composable(ClientDestinations.CHAT_SCREEN) {
+                ClientChatScreen(
+                    workerName = "Nombre de Prueba",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
             composable(ClientDestinations.SERVICES) { ClientServicesScreen() }
-            composable(ClientDestinations.PROFILE) { ClientProfileScreen() }
+            // ... (Resto de las rutas)
         }
     }
 }

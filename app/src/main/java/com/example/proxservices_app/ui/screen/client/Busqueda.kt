@@ -56,7 +56,7 @@ import com.example.proxservices_app.R // Asegúrate de que esta ruta sea correct
 import com.example.proxservices_app.ui.navigation.ClientDestinations
 import java.util.Locale
 
-val sampleCategories = listOf(
+val sampleCategorries = listOf(
     // Reemplaza R.drawable.* con iconos existentes si falla
     Category(1, "Limpieza", R.drawable.ic_limpieza),
     Category(2, "Plomería", R.drawable.ic_plomeria),
@@ -159,7 +159,7 @@ fun BusquedaScreen(
 
                     // 2. Carrusel de Categorías
                     CategoryCarousel(
-                        categories = sampleCategories,
+                        categories = sampleCategorries,
                         onCategorySelected = onCategorySelected
                     )
                     Spacer(modifier = Modifier.height(16.dp))
