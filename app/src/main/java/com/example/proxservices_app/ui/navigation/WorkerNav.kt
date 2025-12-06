@@ -26,53 +26,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.example.proxservices_app.R
-// Importamos tus pantallas
 import com.example.proxservices_app.ui.screen.worker.WorkerHomeScreen
-import com.example.proxservices_app.ui.screen.worker.WorkerJobConfirmationScreen
 import com.example.proxservices_app.ui.screen.worker.WorkerJobsScreen
 import com.example.proxservices_app.ui.screen.worker.WorkerMessagesScreen
 import com.example.proxservices_app.ui.screen.worker.WorkerPointsScreen
-// IMPORTACIONES NECESARIAS
-import com.example.proxservices_app.ui.screen.worker.WorkerNotificationsScreen
-// IMPORTAMOS LA NUEVA PANTALLA DE CANJE (Asegúrate de haber creado este archivo)
-import com.example.proxservices_app.ui.screen.worker.WorkerPointRedemptionScreen
 import com.example.proxservices_app.ui.theme.Blanco
 import com.example.proxservices_app.ui.theme.GrisTextoPrincipal
 import com.example.proxservices_app.ui.theme.PrincipalAzul
-
-// --- 1. DEFINICIÓN DE RUTAS CON ID DE ICONO ---
-sealed class WorkerNavItem(val label: String, val route: String, val iconId: Int) {
-    object Home : WorkerNavItem("Home", "worker_home", R.drawable.ic_home)
-    object Messages : WorkerNavItem("Mensajes", "worker_messages", R.drawable.ic_messages)
-    object Jobs : WorkerNavItem("Trabajos", "worker_jobs", R.drawable.ice_jobs)
-    object Points : WorkerNavItem("Puntos", "worker_points", R.drawable.ic_puntos)
-
-    // ¡OK! Ruta para la nueva pantalla de canje
-    object PointRedemption : WorkerNavItem("Canjear", "point_redemption", R.drawable.ic_puntos)
-
-    // ¡OK! Ruta de Notificaciones
-    object Notifications : WorkerNavItem("Notificaciones", "worker_notifications", R.drawable.ic_bell)
-
-    object JobConfirmation : WorkerNavItem("Confirmacion", "job_confirmation/{jobId}", R.drawable.ice_jobs) {
-        fun createRoute(jobId: String) = "job_confirmation/$jobId"
-    }
-}
-
 
 @Composable
 fun WorkerNav() {
     val navController = rememberNavController()
 
-    // Lista de ítems para la barra inferior (No incluye Notificaciones ni Confirmación ni Canje)
     val workerNavItems = listOf(
-        WorkerNavItem.Home,
-        WorkerNavItem.Messages,
-        WorkerNavItem.Jobs,
-        WorkerNavItem.Points
+        NavItem("Home", { painterResource(id = R.drawable.ic_home) }, "worker_home"),
+        NavItem("Mensajes", { painterResource(id = R.drawable.ic_messages) }, "worker_messages"),
+        NavItem("Trabajos", { painterResource(id = R.drawable.ice_jobs) }, "worker_jobs"),
+        NavItem("Puntos", { painterResource(id = R.drawable.ic_puntos) }, "worker_points")
     )
 
     Scaffold(
@@ -85,23 +56,20 @@ fun WorkerNav() {
                 val currentDestination = navBackStackEntry?.destination
 
                 workerNavItems.forEach { navItem ->
-                    val isSelected =
-                        currentDestination?.hierarchy?.any { it.route == navItem.route } == true
+                    val isSelected = currentDestination?.hierarchy?.any { it.route == navItem.route } == true
 
                     NavigationBarItem(
                         selected = isSelected,
                         onClick = {
                             navController.navigate(navItem.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         },
                         icon = {
                             Icon(
-                                painter = painterResource(id = navItem.iconId),
+                                painter = navItem.icon(),
                                 contentDescription = navItem.label,
                                 modifier = Modifier.size(32.dp)
                             )
@@ -131,70 +99,48 @@ fun WorkerNav() {
             }
         }
     ) { innerPadding ->
-        // --- 2. NAVHOST: DONDE ESTÁ LA CONEXIÓN ---
         NavHost(
             navController = navController,
-            startDestination = WorkerNavItem.Home.route,
+            startDestination = "worker_home",
             modifier = Modifier.padding(innerPadding)
         ) {
-
-            // A. WorkerHomeScreen (ACTUALIZADO CON CALLBACK DE NOTIFICACIONES)
-            composable(WorkerNavItem.Home.route) {
+            // 1. WorkerHomeScreen
+            // Requiere callbacks: onNavigateToConfirmation y onNavigateToNotifications
+            composable("worker_home") {
                 WorkerHomeScreen(
                     onNavigateToConfirmation = { jobId ->
-                        navController.navigate(WorkerNavItem.JobConfirmation.createRoute(jobId))
+                        // Aquí iría la navegación a la confirmación, ej:
+                        // navController.navigate("confirmation/$jobId")
                     },
                     onNavigateToNotifications = {
-                        navController.navigate(WorkerNavItem.Notifications.route)
+                        // Navegación a notificaciones
+                        // navController.navigate("notifications")
                     }
                 )
             }
 
-            // B. WorkerMessagesScreen y WorkerJobsScreen (sin cambios)
-            composable(WorkerNavItem.Messages.route) { WorkerMessagesScreen(navController = navController) }
-            composable(WorkerNavItem.Jobs.route) { WorkerJobsScreen(navController = navController) }
+            // 2. WorkerMessagesScreen
+            // Según el error, requiere 'navController'
+            composable("worker_messages") {
+                WorkerMessagesScreen(navController = navController)
+            }
 
-            // C. WorkerPointsScreen (ACTUALIZADO CON CALLBACK DE CANJE)
-            composable(WorkerNavItem.Points.route) {
+            // 3. WorkerJobsScreen
+            // Según el error, requiere 'navController'
+            composable("worker_jobs") {
+                WorkerJobsScreen(navController = navController)
+            }
+
+            // 4. WorkerPointsScreen
+            // Según el error, requiere 'navController' y 'onNavigateToRedemption'
+            composable("worker_points") {
                 WorkerPointsScreen(
                     navController = navController,
-                    // ¡NUEVO CALLBACK! Conecta el botón "Canjear" a la nueva ruta
-                    onNavigateToRedemption = { navController.navigate(WorkerNavItem.PointRedemption.route) }
-                )
-            }
-
-            // D. NUEVA PANTALLA DE CANJE DE PUNTOS
-            composable(WorkerNavItem.PointRedemption.route) {
-                // Asume que WorkerPointRedemptionScreen(navController: NavHostController) existe
-                WorkerPointRedemptionScreen(navController = navController)
-            }
-
-
-            // E. NUEVA PANTALLA DE NOTIFICACIONES
-            composable(WorkerNavItem.Notifications.route) {
-                WorkerNotificationsScreen(navController = navController)
-            }
-
-            // F. WorkerJobConfirmationScreen (Con los dos parámetros corregidos)
-            composable(
-                route = WorkerNavItem.JobConfirmation.route,
-                arguments = listOf(
-                    navArgument("jobId") {
-                        type = NavType.StringType
-                        nullable = false
+                    onNavigateToRedemption = {
+                        // Lógica para navegar al canje
                     }
-                )
-            ) { backStackEntry ->
-                val jobId = backStackEntry.arguments?.getString("jobId")
-
-                WorkerJobConfirmationScreen(
-                    jobId = jobId ?: "ERROR_ID",
-                    navController = navController
                 )
             }
         }
     }
-}//fin
-
-
-
+}

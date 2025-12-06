@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ProxServices_appTheme {
-                //    Esto elimina el Scaffold y el Greeting de ejemplo.
+
                 NavGraph()
                // BusquedaScreen()
             }
